@@ -2,11 +2,11 @@
 
 function calc_dt(g::Grid)
     C = 0.8
-    @debug "max(g.vel) = $(maximum(abs.(g.vel)))"
+    @debug "max(g.vx) = $(maximum(abs.(g.vx)))"
     @debug "max(g.cs) = $(maximum(abs.(g.cs)))"
     @debug "max(g.rho) = $(maximum(abs.(g.rho)))"
     @debug "max(g.pressure) = $(maximum(abs.(g.pressure)))"
-    return C * g.dx / max(maximum(abs.(g.vel .+ g.cs)), maximum(abs.(g.vel .- g.cs)))
+    return C * g.dx / max(maximum(abs.(g.vx .+ g.cs)), maximum(abs.(g.vx .- g.cs)))
 end
 
 function calc_dt(g::Grid2d)

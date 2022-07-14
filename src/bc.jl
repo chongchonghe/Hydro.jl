@@ -1,7 +1,3 @@
-include("grid2.jl")
-
-using .Grids
-
 """ Fill 1D boundaries: transimissive """
 function fill_trans_bc(g::Grid)
     for k = 1:3, i = 1:g.ng
@@ -39,13 +35,10 @@ function twod2oned(g::Grid2d)
     midy = floor(Int16, g.ylen/2)
     @. begin
         g1.rho = g.rho[:, midy]
-        g1.vel = g.vx[:, midy]
+        g1.vx = g.vx[:, midy]
         g1.pressure = g.pressure[:, midy]
     end
     prim2cons(g1)
     cons2prim(g1)
     return g1
 end
-
-
-

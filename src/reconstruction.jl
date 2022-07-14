@@ -1,19 +1,28 @@
 # Requires grid.jl, flux.jl
 
+# function reconstruct_1st(g::Grid)
+#     for k = 1:3, i = g.jlo-1:g.jhi
+#         g.primsL[i, k] = g.prims[i, k]
+#         g.primsR[i, k] = g.prims[i+1, k]
+#     end
+#     return
+# end
+
+
 function minmod(x, y, z)
     0.25 * abs(sign(x) + sign(y)) * (sign(x) + sign(z)) *
         min(abs(x), abs(y), abs(z))
 end
 
 
-""" Interpolate prims (rhoL, rhoR, velL, velR, pressureL, pressureR),
+""" Interpolate prims (rhoL, rhoR, vxL, vxR, pressureL, pressureR),
 which are used to update the cons (uL, uR) """
 function reconstruct(g::Grid, theta::Float64=1.5)
     cdiff = similar(g.prims)
-    # NOTE: g.rhoL, g.velL, and g.pressureL are links to the rows in
+    # NOTE: g.rhoL, g.vxL, and g.pressureL are links to the rows in
     # g.primsL, so they update along with it.
     for k = 1:3
-        c = @view g.prims[:, k]     # c = rho, vel, pressure for k = 1, 2, 3
+        c = @view g.prims[:, k]     # c = rho, vx, pressure for k = 1, 2, 3
         for i = g.jlo-1:g.jhi+1
             cdiff[i, k] = 0.5 * minmod(theta * (c[i] - c[i-1]),
                                        0.5 * (c[i+1] - c[i-1]),
@@ -30,8 +39,8 @@ function reconstruct(g::Grid, theta::Float64=1.5)
     end
 
     # update uR and uL
-    prim2cons!(g.rhoL, g.velL, g.pressureL, g.uL, g.gamma) # no potential sqrt error
-    prim2cons!(g.rhoR, g.velR, g.pressureR, g.uR, g.gamma)
+    prim2cons!(g.rhoL, g.vxL, g.pressureL, g.uL, g.gamma) # no potential sqrt error
+    prim2cons!(g.rhoR, g.vxR, g.pressureR, g.uR, g.gamma)
 end
 
 

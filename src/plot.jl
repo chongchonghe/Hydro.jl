@@ -10,7 +10,7 @@ function plot_curve(g::Grid; fn="t.png", is_save=true)
     data = zeros(g.nx, 4)
     data[:, 1] .= g.rho[g.jlo:g.jhi]
     data[:, 2] .= g.pressure[g.jlo:g.jhi]
-    data[:, 3] .= g.vel[g.jlo:g.jhi]
+    data[:, 3] .= g.vx[g.jlo:g.jhi]
     data[:, 4] .= g.epsilon[g.jlo:g.jhi]
     p = scatter(x, data, layout=4, ms=1, legend=false, xlabel="x",
                 ylabel=["rho" "p" "vel" "epsilon"], xlim=[0, 1],
@@ -58,13 +58,13 @@ function plot_standard_sod(g::Grid; fn="t.png", is_save=true)
     else
         return p
     end
-    return
+    return relerror 
 end
 
 
 function plot_standard_sod(g::Grid2d; fn="t.png", is_save=true)
     g1 = twod2oned(g)
-    plot_standard_sod(g1; fn=fn, is_save=is_save)
+    return plot_standard_sod(g1; fn=fn, is_save=is_save)
 end
 
 
@@ -75,7 +75,7 @@ function plot_curve_old(g::Grid; fn="t.png", is_save=true)
     data = zeros(g.nx, 4)
     data[:, 1] .= g.rho[g.jlo:g.jhi]
     data[:, 2] .= g.pressure[g.jlo:g.jhi]
-    data[:, 3] .= g.vel[g.jlo:g.jhi]
+    data[:, 3] .= g.vx[g.jlo:g.jhi]
     data[:, 4] .= g.epsilon[g.jlo:g.jhi]
     # data[:, 4] .= g.E[g.jlo:g.jhi]
 
@@ -110,7 +110,7 @@ function plot_curve_old(g::Grid; fn="t.png", is_save=true)
     # # new style
     # p1 = scatter(x, g.rho[g.jlo:g.jhi], ylabel="rho", ylim=(0., 1.1), legend=false, ms=1)
     # p2 = scatter(x, g.pressure[g.jlo:g.jhi], ylabel="p", ylim=(0, 1.2), legend=false, ms=1)
-    # p3 = scatter(x, g.vel[g.jlo:g.jhi], ylabel="vel", ylim=(-0.2, 1), legend=false, ms=1)
+    # p3 = scatter(x, g.vx[g.jlo:g.jhi], ylabel="vel", ylim=(-0.2, 1), legend=false, ms=1)
     # p4 = scatter(x, g.epsilon[g.jlo:g.jhi], ylabel="epsilon", ylim=(1.6, 3), legend=false, ms=1)
     # plot(p1, p2, p3, p4, dpi=300, layout=@layout [a b; c d])
 

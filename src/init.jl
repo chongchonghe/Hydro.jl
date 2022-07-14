@@ -10,7 +10,7 @@ function init_sod(g::Grid)
     g.pressure[1:mid] .= p1
     g.rho[(mid+1):end] .= rho2
     g.pressure[(mid+1):end] .= p2
-    g.vel .= 0.0
+    g.vx .= 0.0
     return
 end
 

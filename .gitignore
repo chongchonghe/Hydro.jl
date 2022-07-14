@@ -1,3 +1,6 @@
+files
+local/
+
 *.jl.*.cov
 *.jl.cov
 *.jl.mem

@@ -2,7 +2,7 @@
 
 module Hydro
 
-export hydro, Grid, Grid2d, lax, hll1st, hll2nd, euler, RK2, RK3,
+export hydro, Grid, Grid2d, lax, hll1st, hll2nd, hllc, euler, RK2, RK3,
     init_sod, init_ball, init_KH, fill_trans_bc, fill_periodic_bc,
     plot_curve, plot_heat, plot_curve_or_heat, plot_heat_four_panels,
     plot_standard_sod
@@ -11,6 +11,7 @@ export hydro, Grid, Grid2d, lax, hll1st, hll2nd, euler, RK2, RK3,
 include("grid.jl")
 include("io.jl")
 include("flux.jl")
+include("bc.jl")
 include("init.jl")
 include("reconstruction.jl")
 include("solver.jl")
@@ -121,7 +122,7 @@ Plotting function: $(plotit)
             println("t = $(g.t), dt = $(dt)")
             integrator(g, dt, solver, rebuild)
             @debug "count = $(count), t = $(g.t), tout = $(tout)"
-            # @debug "max,min(g.vel) = $(maximum(abs.(g.vel))), $(minimum(abs.(g.vel)))"
+            # @debug "max,min(g.vx) = $(maximum(abs.(g.vx))), $(minimum(abs.(g.vx)))"
             count += 1
             if g.t > tout || g.t ≈ tout
                 fcount += 1
