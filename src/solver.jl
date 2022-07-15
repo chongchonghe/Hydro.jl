@@ -40,8 +40,8 @@ function hll(g::Grid, reconstruct::Function=reconstruct2nd)
             g.vxL[i], g.vxR[i], g.csL[i], g.csR[i])
     end
     # this is a simplification of Eq. 10.21, Toro book
-    alpha_plus = max.(0.0, sr) 
-    alpha_minus = max.(0.0, -1.0 .* sl) 
+    alpha_plus = max.(0.0, sr)
+    alpha_minus = max.(0.0, -1.0 .* sl)
     # save some memory by calculating fhll step by step
     calc_flux!(g.rhoL, g.vxL, g.pressureL, g.gamma, g.fu)
     for k = 1:3, i = g.jlo-1:g.jhi
@@ -67,7 +67,7 @@ function hll(g::Grid2d, reconstruct::Function=reconstruct2nd)
     # interpolate_x(g)
     reconstruct(g, 1)
     # no potential sqrt error
-    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma) 
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
     prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
     # alpha_plus = max.(0.0, g.vxL .+ g.csL, g.vxR .+ g.csR)
     # alpha_minus = max.(0.0, -g.vxL .+ g.csL, -g.vxR .+ g.csR)
@@ -105,7 +105,7 @@ function hll(g::Grid2d, reconstruct::Function=reconstruct2nd)
     # interpolate_y(g)
     reconstruct(g, 2)
     # no potential sqrt error
-    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma) 
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
     prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
     # alpha_plus = max.(0.0, g.vxL .+ g.csL, g.vxR .+ g.csR)
     # alpha_minus = max.(0.0, -g.vxL .+ g.csL, -g.vxR .+ g.csR)
@@ -164,7 +164,7 @@ function hllc(g::Grid, reconstruct::Function=reconstruct2nd)
         ss[i] = (g.pR[i] - g.pL[i] + g.rhoL[i] * g.vxL[i] *
             (sl[i] - g.vxL[i]) - g.rhoR[i] * g.vxR[i] *
             (sr[i] - g.vxR[i])) / (g.rhoL[i] *
-            (sl[i] - g.vxL[i]) - g.rhoR[i] * (sr[i] - g.vxR[i]))        
+            (sl[i] - g.vxL[i]) - g.rhoR[i] * (sr[i] - g.vxR[i]))
     end
     calc_flux!(g.rhoL, g.vxL, g.pressureL, g.gamma, g.fu)
     fuL = copy(g.fu)
@@ -205,20 +205,20 @@ function hllc(g::Grid2d, reconstruct::Function=reconstruct2nd)
     # interpolate_x(g)
     reconstruct(g, 1)
     # no potential sqrt error
-    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma) 
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
     prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
     sl = similar(g.cs)
     sr = similar(g.cs)
     ss = similar(g.cs)
     for j = g.yjlo:g.yjhi, i = g.xjlo-1:g.xjhi
-        # # davis2
-        # sl[i, j], sr[i, j] = util_speed_davis2(
-        #     g.vxL[i, j], g.vxR[i, j], g.csL[i, j], g.csR[i, j])
-        # roe
-        sl[i, j], sr[i, j] = util_speed_roe(
-            g.rhoL[i, j], g.vxL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
-            g.rhoR[i, j], g.vxR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
-            g.gamma)
+        # davis2
+        sl[i, j], sr[i, j] = util_speed_davis2(
+            g.vxL[i, j], g.vxR[i, j], g.csL[i, j], g.csR[i, j])
+        # # roe
+        # sl[i, j], sr[i, j] = util_speed_roe(
+        #     g.rhoL[i, j], g.vxL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
+        #     g.rhoR[i, j], g.vxR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
+        #     g.gamma)
         ss[i, j] = (g.pR[i, j] - g.pL[i, j] + g.rhoL[i, j] * g.vxL[i, j] *
             (sl[i, j] - g.vxL[i, j]) - g.rhoR[i, j] * g.vxR[i, j] *
             (sr[i, j] - g.vxR[i, j])) / (g.rhoL[i, j] *
@@ -263,20 +263,20 @@ function hllc(g::Grid2d, reconstruct::Function=reconstruct2nd)
     # interpolate_y(g)
     reconstruct(g, 2)
     # no potential sqrt error
-    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma) 
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
     prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
     sl = similar(g.cs)
     sr = similar(g.cs)
     ss = similar(g.cs)
     for j = g.yjlo-1:g.yjhi, i = g.xjlo:g.xjhi
-        # # davis2
-        # sl[i, j], sr[i, j] = util_speed_davis2(
-        #     g.vxL[i, j], g.vxR[i, j], g.csL[i, j], g.csR[i, j])
-        # roe
-        sl[i, j], sr[i, j] = util_speed_roe(
-            g.rhoL[i, j], g.vyL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
-            g.rhoR[i, j], g.vyR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
-            g.gamma)
+        # davis2
+        sl[i, j], sr[i, j] = util_speed_davis2(
+            g.vxL[i, j], g.vxR[i, j], g.csL[i, j], g.csR[i, j])
+        # # roe
+        # sl[i, j], sr[i, j] = util_speed_roe(
+        #     g.rhoL[i, j], g.vyL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
+        #     g.rhoR[i, j], g.vyR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
+        #     g.gamma)
         ss[i, j] = (g.pR[i, j] - g.pL[i, j] + g.rhoL[i, j] * g.vyL[i, j] *
             (sl[i, j] - g.vyL[i, j]) - g.rhoR[i, j] * g.vyR[i, j] *
             (sr[i, j] - g.vyR[i, j])) / (g.rhoL[i, j] *

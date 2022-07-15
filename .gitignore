@@ -1,5 +1,6 @@
 files
 local/
+figures/
 
 *.jl.*.cov
 *.jl.cov

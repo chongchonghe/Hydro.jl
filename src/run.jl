@@ -35,6 +35,10 @@ function arg_parser()
         help = "the time step of plotting figures"
         arg_type = Float64
         default = 0.01
+        "--order"
+        help = "the spacial precision of the Riemann solver"
+        arg_type = Int
+        default = 2
         "--ny"
         help = "number of pixels in the x dimention; negative values means ny = nx"
         arg_type = Int64
@@ -57,10 +61,10 @@ function main1()
 
     if args["solver"] == "lax"
         solver = lax
-    elseif args["solver"] == "hll1st"
-        solver = hll1st
-    elseif args["solver"] == "hll2nd"
-        solver = hll2nd
+    elseif args["solver"] == "hll"
+        solver = hll
+    elseif args["solver"] == "hllc"
+        solver = hllc
     else
         println("Unknown solver $(args["solver"])")
         exit(1)
@@ -121,10 +125,16 @@ function main1()
     end
 
     hydro(dim, args["nx"], args["tend"], args["folder"], init;
-          solver=solver, integrator=integrator, fillbc=fillbc, plotit=plotit,
-          dtout=args["dtout"], ny=args["ny"],
+          solver=solver,
+          order=args["order"],
+          integrator=integrator,
+          fillbc=fillbc,
+          plotit=plotit,
+          dtout=args["dtout"],
+          ny=args["ny"],
           storealldata=args["storealldata"],
-          restart=args["restart"], islog=true)
+          restart=args["restart"],
+          islog=true)
 
     return
 end
