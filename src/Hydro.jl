@@ -2,7 +2,7 @@
 
 module Hydro
 
-export hydro, Grid, Grid2d, lax, hll1st, hll2nd, hllc, euler, RK2, RK3,
+export hydro, Grid, Grid2d, lax, hll, hll2nd, hllc, euler, RK2, RK3,
     init_sod, init_ball, init_KH, fill_trans_bc, fill_periodic_bc,
     plot_curve, plot_heat, plot_curve_or_heat, plot_heat_four_panels,
     plot_standard_sod
@@ -21,7 +21,9 @@ include("plot.jl")
 
 """ A general-purpose hydro solver """
 function hydro(dim, nx, tend, folder::String, init::Function;
-               solver::Function=hll2nd, integrator::Function=RK3,
+               solver::Function=hll2nd, 
+               order::Int=2,
+               integrator::Function=RK3,
                fillbc::Function=fill_trans_bc,
                plotit::Function=plot_curve_or_heat,
                dtout::Float64=0.01, ny::Int64=-1,
@@ -78,6 +80,11 @@ Plotting function: $(plotit)
         end
         g = Grid2d(nx=nx, ny=ny, ng=ng)
     end
+    if order == 1
+        reconstruct = reconstruct1st
+    elseif order == 2
+        reconstruct = reconstruct2nd
+    end
     function rebuild(g)
         fillbc(g)
         cons2prim(g)
@@ -105,13 +112,15 @@ Plotting function: $(plotit)
     end
 
     # plot the first snapshot
-    plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
+    error = plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
     count = 0
-    msg = "\ncount = $(count), fcount = $(fcount), " *
-            "t = $(g.t)\n"
-    print(msg)
+    msg = "\ncount = $(count), fcount = $(fcount), t = $(g.t)"
+    if plotit == plot_standard_sod
+        msg = msg * ", relative error = $(error)"
+    end
+    print(msg * "\n")
     if islog
-        write(fw, msg)
+        write(fw, msg * "\n")
     end
 
     # evolve and plot snapshots
@@ -119,21 +128,24 @@ Plotting function: $(plotit)
     try
         while true
             dt = calc_dt(g)
-            println("t = $(g.t), dt = $(dt)")
-            integrator(g, dt, solver, rebuild)
+            # println("t = $(g.t), dt = $(dt)")
+            integrator(g, dt, solver, reconstruct, rebuild)
             @debug "count = $(count), t = $(g.t), tout = $(tout)"
             # @debug "max,min(g.vx) = $(maximum(abs.(g.vx))), $(minimum(abs.(g.vx)))"
             count += 1
             if g.t > tout || g.t ≈ tout
                 fcount += 1
-                msg = "count = $(count), fcount = $(fcount), " *
-                        "t = $(g.t), tout = $(tout)\n"
-                print(msg)
-                if islog
-                    write(fw, msg)
-                end
                 # plotit(g, fn="$(folder)/f-nx$(nx)-$(lpad(fcount, 5, '0')).png")
-                plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
+                error = plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
+                msg = "count = $(count), fcount = $(fcount), " *
+                        "t = $(g.t), tout = $(tout)"
+                if plotit == plot_standard_sod
+                    msg = msg * ", relative error = $(error)"
+                end
+                print(msg * "\n")
+                if islog
+                    write(fw, msg * "\n")
+                end
                 if storealldata || (g.t > tend || g.t ≈ tend)
                     # write jld data
                     fn = "$(datadir)/hydro_$(lpad(fcount, 5, '0')).jld"

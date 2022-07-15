@@ -123,15 +123,16 @@ end
 
 
 """ Plot heatmap of the density for a 2d simulation """
-function plot_heat(g::Grid2d; fn="heat.png", is_save=true, zmin=0., zmax=2.)
+# function plot_heat(g::Grid2d; fn="heat.png", is_save=true, zmin=0., zmax=2.)
+function plot_heat(g::Grid2d; fn="heat.png", is_save=true, zmin=0.9, zmax=2.1)
     # calculate rho, u, p e
     x = g.x[g.xjlo:g.xjhi]
     y = g.y[g.yjlo:g.yjhi]
     z = g.rho[g.xjlo:g.xjhi, g.yjlo:g.yjhi]'
     thesize = (800, 800)
     p0 = heatmap(y, x, z, dpi=300, size=thesize, clim=(zmin, zmax),
-                 xlim=(0, 1), ylim=(0, 1), showaxis=false, c=:thermal,
-                 aspectratio=:equal)
+                 xlim=(0, 1), ylim=(0, 1), showaxis=false, showticks=false,
+                 c=:thermal, aspectratio=:equal, colorbar=false)
     if is_save
         savefig(fn)
     else
