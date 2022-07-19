@@ -1,14 +1,5 @@
 # Requires grid.jl, flux.jl
 
-# function reconstruct_1st(g::Grid)
-#     for k = 1:3, i = g.jlo-1:g.jhi
-#         g.primsL[i, k] = g.prims[i, k]
-#         g.primsR[i, k] = g.prims[i+1, k]
-#     end
-#     return
-# end
-
-
 function minmod(x, y, z)
     0.25 * abs(sign(x) + sign(y)) * (sign(x) + sign(z)) *
         min(abs(x), abs(y), abs(z))

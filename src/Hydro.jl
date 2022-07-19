@@ -2,11 +2,11 @@
 
 module Hydro
 
-export hydro, Grid, Grid2d, lax, hll, hll2nd, hllc, euler, RK2, RK3,
+export hydro, Grid, Grid2d, lax, hll, hllc, euler, RK2, RK3,
     init_sod, init_sod_y, init_ball, init_KH, fill_trans_bc, fill_periodic_bc,
     plot_curve, plot_heat, plot_curve_or_heat, plot_heat_four_panels, plotnone,
-    plot_standard_sod, plot_standard_sod_y,
-    hll_vxonly, hllc_vxonly, hllc2, hllc3, hllc3_vy
+    plot_standard_sod, plot_standard_sod_y
+    # hll_vxonly, hllc_vxonly, hllc2, hllc3, hllc3_vy
 
 
 include("grid.jl")
@@ -22,7 +22,7 @@ include("plot.jl")
 
 """ A general-purpose hydro solver """
 function hydro(dim, nx, tend, folder::String, init::Function;
-               solver::Function=hll2nd, 
+               solver::Function=hll, 
                order::Int=2,
                integrator::Function=RK3,
                fillbc::Function=fill_trans_bc,

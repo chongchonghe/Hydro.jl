@@ -1,17 +1,16 @@
 """ Time integrator """
 
-function calc_dt(g::Grid)
-    C = 0.8
+function calc_dt(g::Grid, dt_init=1.0)
     @debug "max(g.vx) = $(maximum(abs.(g.vx)))"
     @debug "max(g.cs) = $(maximum(abs.(g.cs)))"
     @debug "max(g.rho) = $(maximum(abs.(g.rho)))"
     @debug "max(g.pressure) = $(maximum(abs.(g.pressure)))"
+    C = 0.8
     themax = 0.0
     for i = g.jlo:g.jhi
-        themax = max(themax, abs(g.vx + g.cs), abs(g.vx - g.cs))
+        themax = max(themax, abs(g.vx[i] + g.cs[i]), abs(g.vx[i] - g.cs[i]))
     end
     return C * g.dx / themax
-    # return C * g.dx / max(maximum(abs.(g.vx .+ g.cs)), maximum(abs.(g.vx .- g.cs)))
 end
 
 function calc_dt(g::Grid2d, dt_init)

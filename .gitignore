@@ -1,6 +1,7 @@
 files
 local/
 figures/
+test/mytest.jl
 
 *.jl.*.cov
 *.jl.cov
