@@ -75,7 +75,7 @@ function reconstruct2nd(g::Grid; theta::Float64=1.5)
 end
 
 
-""" Interpolate primitive variables in the x and y components """
+""" Interpolate primitive variables (ρ, vx, vy, p, cs) in the x and y components """
 function reconstruct2nd(g::Grid2d, axis::Int; theta::Float64=1.5)
     cdiff = similar(g.prims)
     if axis == 1

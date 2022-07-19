@@ -24,7 +24,7 @@ function arg_parser()
         required = true
         "solver"
         help = "the Riemann solver, one of lax, hll1st, hll2nd"
-        default = "hll2nd"
+        default = "hll"
         "integrator"
         help = "The integrator to use, one of euler, RK2, RK3"
         default = "RK3"
@@ -59,6 +59,44 @@ function main1()
 
     args = arg_parser()
 
+    problem = args["problem"]
+    plotit = plot_curve_or_heat
+    if problem == "sod"
+        dim = 1
+        init = init_sod
+        fillbc = fill_trans_bc
+        plotit = plot_standard_sod
+    elseif problem == "sod2d"
+        dim = 2
+        init = init_sod
+        fillbc = fill_trans_bc
+        plotit = plot_standard_sod
+    elseif problem == "sod2dy"
+        dim = 2
+        init = init_sod_y
+        fillbc = fill_trans_bc
+        plotit = plot_standard_sod_y
+    elseif problem == "ball"
+        dim = 2
+        init = init_ball
+        fillbc = fill_periodic_bc
+    elseif problem == "KH"
+        dim = 2
+        init = init_KH
+        fillbc = fill_periodic_bc
+    elseif problem == "KH2"
+        dim = 2
+        init = init_KH2
+        fillbc = fill_periodic_bc
+    elseif problem == "KHrand"
+        dim = 2
+        init = init_KH_rand
+        fillbc = fill_periodic_bc
+    else
+        println("Undefined problem $(problem)")
+        exit(1)
+    end
+
     if args["solver"] == "lax"
         solver = lax
     elseif args["solver"] == "hll"
@@ -81,46 +119,19 @@ function main1()
         exit(1)
     end
 
+    # default: auto
     if args["plot"] == "curve"
         plotit = plot_curve
+    elseif args["plot"] == "standard_sod"
+        plotit = plot_standard_sod
     elseif args["plot"] == "heat"
         plotit = plot_heat
     elseif args["plot"] == "heat4panels"
         plotit = plot_heat_four_panels
     elseif args["plot"] == "auto"
-        plotit = plot_curve_or_heat
+        # use what is chosen above
     else
         println("Unknown plotting function $(args["plot"])")
-        exit(1)
-    end
-
-    problem = args["problem"]
-    if problem == "sod"
-        dim = 1
-        init = init_sod
-        fillbc = fill_trans_bc
-    elseif problem == "sod2d"
-        dim = 2
-        init = init_sod
-        fillbc = fill_trans_bc
-    elseif problem == "ball"
-        dim = 2
-        init = init_ball
-        fillbc = fill_periodic_bc
-    elseif problem == "KH"
-        dim = 2
-        init = init_KH
-        fillbc = fill_periodic_bc
-    elseif problem == "KH2"
-        dim = 2
-        init = init_KH2
-        fillbc = fill_periodic_bc
-    elseif problem == "KHrand"
-        dim = 2
-        init = init_KH_rand
-        fillbc = fill_periodic_bc
-    else
-        println("Undefined problem $(problem)")
         exit(1)
     end
 

@@ -33,6 +33,24 @@ function init_sod(g::Grid2d)
 end
 
 
+""" Set the 2d initial conditions: a 2D version of the 1D sod shocktube in the y dimension """
+function init_sod_y(g::Grid2d)
+    mid = floor(Int64, g.ylen/2)
+    rho1 = 1.0
+    rho2 = 0.125
+    p1 = 1.0
+    p2 = 0.1
+
+    g.rho[:, 1:mid] .= rho1
+    g.pressure[:, 1:mid] .= p1
+    g.rho[:, (mid+1):end] .= rho2
+    g.pressure[:, (mid+1):end] .= p2
+    g.vx .= 0.0
+    g.vy .= 0.0
+    return
+end
+
+
 """ Set the 2d sod shock tube: a ball of radius 0.2 at center with
 density 1.0, pressure 1.0. Outside has density 0.125 and pressure 0.1 """
 function init_ball(g::Grid2d)

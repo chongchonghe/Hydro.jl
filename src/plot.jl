@@ -5,6 +5,36 @@ using Printf
 using Plots
 
 
+function twod2oned(g::Grid2d, axis='x')
+    if axis == 'x'
+        g1 = Grid(nx=g.nx, ng=g.ng)
+        midy = floor(Int16, g.ylen/2)
+        @. begin
+            g1.rho = g.rho[:, midy]
+            g1.vx = g.vx[:, midy]
+            g1.pressure = g.pressure[:, midy]
+        end
+    else
+        g1 = Grid(nx=g.ny, ng=g.ng)
+        midx = floor(Int16, g.xlen/2)
+        @. begin
+            g1.rho = g.rho[midx, :]
+            g1.vx = g.vy[midx, :]
+            g1.pressure = g.pressure[midx, :]
+        end
+    end
+    g1.t = g.t
+    prim2cons(g1)
+    cons2prim(g1)
+    return g1
+end
+
+
+function plotnone(g; fn="", is_save=true)
+    return
+end
+
+
 function plot_curve(g::Grid; fn="t.png", is_save=true)
     x = g.x[g.jlo:g.jhi]
     data = zeros(g.nx, 4)
@@ -68,57 +98,9 @@ function plot_standard_sod(g::Grid2d; fn="t.png", is_save=true)
 end
 
 
-""" make the plot, 1D case """
-function plot_curve_old(g::Grid; fn="t.png", is_save=true)
-    # calculate rho, u, p e
-    x = g.x[g.jlo:g.jhi]
-    data = zeros(g.nx, 4)
-    data[:, 1] .= g.rho[g.jlo:g.jhi]
-    data[:, 2] .= g.pressure[g.jlo:g.jhi]
-    data[:, 3] .= g.vx[g.jlo:g.jhi]
-    data[:, 4] .= g.epsilon[g.jlo:g.jhi]
-    # data[:, 4] .= g.E[g.jlo:g.jhi]
-
-    # exact solutions
-    # Set up a shock tube problem
-    problem = ShockTubeProblem(
-        geometry = (0.0, 1.0, 0.5), # left edge, right edge, initial shock location
-        left_state = (ρ = 1.0, u = 0.0, p = 1.0),
-        right_state = (ρ = 0.125, u = 0.0, p = 0.1),
-        t = g.t,
-        γ = 1.4
-    )
-    positions, regions, values = solve(problem, x)
-
-    p = scatter(x, data, layout=4,
-                # title=["density" "pressure" "velocity" "specific energy"],
-                ms=1, legend=false, xlabel="x",
-                ylabel=["rho" "p" "vel" "epsilon"], xlim=[0, 1],
-                ylim=[(0., 1.1) (-0., 1.2) (-.2, 1) (1.6, 3.)],
-                # ylim=[(0., 1.1) (-0., 1.2) (-.2, 1) (-0.1, 2.6)],
-                dpi=300, title=@sprintf("t = %.04f", g.t))
-    # annotate!(1.25, 1.25, "t = $(g.t)")
-
-    exact_e = values.p ./ (g.gamma - 1) ./ values.ρ
-    plot!(x, hcat(values.ρ, values.p, values.u, exact_e), layout=4,
-          color=:blue)
-
-    # find the square difference
-    relerror = sqrt(sum((data[:, 1] .- values.ρ).^2)) / sum(values.ρ)
-    println("Relative error on rho is $(relerror)")
-
-    # # new style
-    # p1 = scatter(x, g.rho[g.jlo:g.jhi], ylabel="rho", ylim=(0., 1.1), legend=false, ms=1)
-    # p2 = scatter(x, g.pressure[g.jlo:g.jhi], ylabel="p", ylim=(0, 1.2), legend=false, ms=1)
-    # p3 = scatter(x, g.vx[g.jlo:g.jhi], ylabel="vel", ylim=(-0.2, 1), legend=false, ms=1)
-    # p4 = scatter(x, g.epsilon[g.jlo:g.jhi], ylabel="epsilon", ylim=(1.6, 3), legend=false, ms=1)
-    # plot(p1, p2, p3, p4, dpi=300, layout=@layout [a b; c d])
-
-    if is_save
-        savefig(fn)
-    else
-        return p
-    end
+function plot_standard_sod_y(g::Grid2d; fn="t.png", is_save=true)
+    g1 = twod2oned(g, 'y')
+    return plot_standard_sod(g1; fn=fn, is_save=is_save)
 end
 
 
