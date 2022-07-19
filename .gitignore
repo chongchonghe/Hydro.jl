@@ -2,6 +2,7 @@ files
 local/
 figures/
 test/mytest.jl
+.vscode/
 
 *.jl.*.cov
 *.jl.cov
