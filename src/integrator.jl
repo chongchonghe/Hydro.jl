@@ -13,7 +13,7 @@ function calc_dt(g::Grid, dt_init=1.0)
     return C * g.dx / themax
 end
 
-function calc_dt(g::Grid2d, dt_init)
+function calc_dt_new_test(g::Grid2d, dt_init)
     C = 0.9
     dt = Inf
     for j = g.yjlo:g.yjhi, i = g.xjlo:g.xjhi
@@ -24,7 +24,7 @@ function calc_dt(g::Grid2d, dt_init)
 end
 
 
-function calc_dt_old(g::Grid2d)
+function calc_dt(g::Grid2d, dt_init=inf)
     C = 0.8
     themax = 0.0
     # @debug "max(g.vx) = $(maximum(abs.(g.vx)))"
@@ -55,7 +55,7 @@ function RK2(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
     uold = copy(g.u)
     lu = solver(g, reconstruct)
     k1 = dt .* lu
-    @. g.u = g.u + 0.5 * k1 
+    @. g.u = g.u + 0.5 * k1
     rebuild(g)
     lu = solver(g, reconstruct)
     k2 = dt .* lu
@@ -69,7 +69,7 @@ function RK2new(g, dt, solver::Function, reconstruct::Function, rebuild::Functio
     uold = copy(g.u)
     lu = solver(g, reconstruct)
     k1 = dt .* lu
-    @. g.u = g.u + k1 
+    @. g.u = g.u + k1
     rebuild(g)
     lu = solver(g, reconstruct)
     k2 = dt .* lu

@@ -23,14 +23,17 @@ include("plot.jl")
 
 """ A general-purpose hydro solver """
 function hydro(dim, nx, tend, folder::String, init::Function;
-               solver::Function=hll, 
+               solver::Function=hll,
                order::Int=2,
                integrator::Function=RK3,
                fillbc::Function=fill_trans_bc,
                plotit::Function=plot_curve_or_heat,
-               dtout::Float64=0.01, ny::Int64=-1,
-               storealldata::Bool=false, restart=-1,
-               islog::Bool=true)
+               dtout::Float64=0.01,
+               ny::Int64=-1,
+               storealldata::Bool=false,
+               restart=-1,
+               islog::Bool=true,
+               verbose::Bool=false)
 
     msg = """
 Running Hydro.jl, a modular 1- and 2-dimensional hydrodynamic
@@ -118,7 +121,7 @@ Plotting function: $(plotit)
 
     # evolve and plot snapshots
     tout = g.t + dtout
-    dt = 1e-5
+    dt = 1.0
     try
         while true
             # v = @view g.u[:, :, 4]
@@ -146,7 +149,9 @@ Plotting function: $(plotit)
                 return
             end
             @debug "count = $(count), t = $(g.t), dt = $(dt)"
-            # println("t = $(g.t), dt = $(dt)")
+            if verbose
+                println("count = $(count), t = $(g.t), dt = $(dt)")
+            end
             integrator(g, dt, solver, reconstruct, rebuild)
             count += 1
             if g.t > tout || g.t ≈ tout

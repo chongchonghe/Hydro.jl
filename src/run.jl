@@ -50,6 +50,9 @@ function arg_parser()
         help = "the snapshot to start the simulation from; the JLD data file [folder]/data/hydro_[restart].jld is used to resume the simulation."
         arg_type = Int64
         default = -1
+        "--verbose"
+        help = "toggle verbose loggin"
+        action = :store_true
     end
     return parse_args(s)
 end
@@ -145,6 +148,7 @@ function main1()
           ny=args["ny"],
           storealldata=args["storealldata"],
           restart=args["restart"],
+          verbose=args["verbose"],
           islog=true)
 
     return
