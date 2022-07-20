@@ -16,6 +16,7 @@ include("bc.jl")
 include("init.jl")
 include("reconstruction.jl")
 include("solver.jl")
+include("hllc3.jl")
 include("integrator.jl")
 include("plot.jl")
 

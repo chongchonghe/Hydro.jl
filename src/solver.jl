@@ -200,6 +200,127 @@ function hllc(g::Grid, reconstruct::Function=reconstruct2nd)
 end
 
 
+""" HLLC solver. Work in progress. Some bugs remains to be fixed. """
+function hllc_var1(g::Grid2d, reconstruct::Function=reconstruct2nd)
+    # x component
+    # interpolate_x(g)
+    reconstruct(g, 1)
+    # no potential sqrt error
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
+    prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
+    sl = similar(g.cs)
+    sr = similar(g.cs)
+    ss = similar(g.cs)
+    for j = g.yjlo:g.yjhi, i = g.xjlo-1:g.xjhi
+        # # davis2
+        # sl[i, j], sr[i, j] = util_speed_davis2(
+        #     g.vxL[i, j], g.vxR[i, j], g.csL[i, j], g.csR[i, j])
+        # roe
+        sl[i, j], sr[i, j] = util_speed_roe(
+            g.rhoL[i, j], g.vxL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
+            g.rhoR[i, j], g.vxR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
+            g.gamma)
+        ss[i, j] = (g.pR[i, j] - g.pL[i, j] + g.rhoL[i, j] * g.vxL[i, j] *
+            (sl[i, j] - g.vxL[i, j]) - g.rhoR[i, j] * g.vxR[i, j] *
+            (sr[i, j] - g.vxR[i, j])) / (g.rhoL[i, j] *
+            (sl[i, j] - g.vxL[i, j]) - g.rhoR[i, j] * (sr[i, j] - g.vxR[i, j]))
+    end
+    calc_flux!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.gamma, g.xfu, g.yfu)
+    fuL = copy(g.xfu)
+    calc_flux!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.gamma, g.xfu, g.yfu)
+    fuR = g.xfu
+    for k = 1:4, j = g.yjlo:g.yjhi, i = g.xjlo-1:g.xjhi
+        fsl = ss[i, j] * (sl[i, j] * g.uL[i, j, k] - fuL[i, j, k])
+        fsr = ss[i, j] * (sr[i, j] * g.uR[i, j, k] - fuR[i, j, k])
+        if k == 2
+            fsl += sl[i, j] * (g.pL[i, j] + g.rhoL[i, j] *
+                (sl[i, j] - g.vxL[i, j]) * (ss[i, j] - g.vxL[i, j]))
+            fsr += sr[i, j] * (g.pR[i, j] + g.rhoL[i, j] *
+                (sr[i, j] - g.vxR[i, j]) * (ss[i, j] - g.vxR[i, j]))
+        elseif k == 4
+            fsl += sl[i, j] * (g.pL[i, j] + g.rhoL[i, j] *
+                (sl[i, j] - g.vxL[i, j]) * (ss[i, j] - g.vxL[i, j])) * ss[i, j]
+            fsr += sr[i, j] * (g.pR[i, j] + g.rhoL[i, j] *
+                (sr[i, j] - g.vxR[i, j]) * (ss[i, j] - g.vxR[i, j])) * ss[i, j]
+        end
+        fsl /= sl[i, j] - ss[i, j]
+        fsr /= sl[i, j] - ss[i, j]
+        if 0 <= sl[i, j]
+            g.fhll[i, j, k] = fuL[i, j, k]
+        elseif sl[i, j] < 0 <= ss[i, j]
+            g.fhll[i, j, k] = fsl
+        elseif ss[i, j] < 0 <= sr[i, j]
+            g.fhll[i, j, k] = fsr
+        else
+            g.fhll[i, j, k] = fuR[i, j, k]
+        end
+    end
+    # calculate L(u)
+    for k = 1:4, j = g.yjlo:g.yjhi, i = g.xjlo:g.xjhi
+        g.lu[i, j, k] = - (g.fhll[i, j, k] - g.fhll[i-1, j, k]) / g.dx
+    end
+
+    # y component
+    # interpolate_y(g)
+    reconstruct(g, 2)
+    # no potential sqrt error
+    prim2cons!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.uL, g.gamma)
+    prim2cons!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.uR, g.gamma)
+    sl = similar(g.cs)
+    sr = similar(g.cs)
+    ss = similar(g.cs)
+    for j = g.yjlo-1:g.yjhi, i = g.xjlo:g.xjhi
+        # # davis2
+        # sl[i, j], sr[i, j] = util_speed_davis2(
+        #     g.vyL[i, j], g.vyR[i, j], g.csL[i, j], g.csR[i, j])
+        # roe
+        sl[i, j], sr[i, j] = util_speed_roe(
+            g.rhoL[i, j], g.vyL[i, j], g.uL[i, j, 4], g.pressureL[i, j],
+            g.rhoR[i, j], g.vyR[i, j], g.uR[i, j, 4], g.pressureR[i, j],
+            g.gamma)
+        ss[i, j] = (g.pR[i, j] - g.pL[i, j] + g.rhoL[i, j] * g.vyL[i, j] *
+            (sl[i, j] - g.vyL[i, j]) - g.rhoR[i, j] * g.vyR[i, j] *
+            (sr[i, j] - g.vyR[i, j])) / (g.rhoL[i, j] *
+            (sl[i, j] - g.vyL[i, j]) - g.rhoR[i, j] * (sr[i, j] - g.vyR[i, j]))
+    end
+    calc_flux!(g.rhoL, g.vxL, g.vyL, g.pressureL, g.gamma, g.xfu, g.yfu)
+    fuL = copy(g.yfu)
+    calc_flux!(g.rhoR, g.vxR, g.vyR, g.pressureR, g.gamma, g.xfu, g.yfu)
+    fuR = g.yfu
+    for k = 1:4, j = g.yjlo-1:g.yjhi, i = g.xjlo:g.xjhi
+        fsl = ss[i, j] * (sl[i, j] * g.uL[i, j, k] - fuL[i, j, k])
+        fsr = ss[i, j] * (sr[i, j] * g.uR[i, j, k] - fuR[i, j, k])
+        if k == 2
+            fsl += sl[i, j] * (g.pL[i, j] + g.rhoL[i, j] *
+                (sl[i, j] - g.vyL[i, j]) * (ss[i, j] - g.vyL[i, j]))
+            fsr += sr[i, j] * (g.pR[i, j] + g.rhoL[i, j] *
+                (sr[i, j] - g.vyR[i, j]) * (ss[i, j] - g.vyR[i, j]))
+        elseif k == 4
+            fsl += sl[i, j] * (g.pL[i, j] + g.rhoL[i, j] *
+                (sl[i, j] - g.vyL[i, j]) * (ss[i, j] - g.vyL[i, j])) * ss[i, j]
+            fsr += sr[i, j] * (g.pR[i, j] + g.rhoL[i, j] *
+                (sr[i, j] - g.vyR[i, j]) * (ss[i, j] - g.vyR[i, j])) * ss[i, j]
+        end
+        fsl /= sl[i, j] - ss[i, j]
+        fsr /= sl[i, j] - ss[i, j]
+        if 0 <= sl[i, j]
+            g.fhll[i, j, k] = fuL[i, j, k]
+        elseif sl[i, j] < 0 <= ss[i, j]
+            g.fhll[i, j, k] = fsl
+        elseif ss[i, j] < 0 <= sr[i, j]
+            g.fhll[i, j, k] = fsr
+        else
+            g.fhll[i, j, k] = fuR[i, j, k]
+        end
+    end
+    # calculate L(u) contributed by the y component of the flux
+    for k = 1:4, j = g.yjlo:g.yjhi, i = g.xjlo:g.xjhi
+        g.lu[i, j, k] += - (g.fhll[i, j, k] - g.fhll[i, j-1, k]) / g.dy
+    end
+    return g.lu
+end
+
+
 # LAX scheme, 1D
 function lax(g::Grid)
     fu = calc_flux(g)
