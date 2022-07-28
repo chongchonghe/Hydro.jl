@@ -7,7 +7,13 @@
 
 Hydro.jl is a modular hydrodynamic code written in pure Julia. 
 
-## Description
+## Tests and Demo
+
+Click on the gif to see a full video on vimeo.com. Click [here](https://github.com/chongchonghe/shared-files/blob/main/github/hll-2d-KH-512.new3.30hz.mp4?raw=true) to download a lossless video (34 MB).
+
+[![gif](https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/da398ffd-45f7-42cd-ba67-034e95081831.gif?ClientID=vimeo-core-prod&Date=1659049549&Signature=9a38f58dc1c3fcad84bd2b2165e4b7b5321ce23f)](https://vimeo.com/734536881)
+
+## Technical Description
 
 - Riemann solver
 	  - HLL
@@ -32,7 +38,7 @@ TODO: add descriptions to the Riemann solvers, interpolation method, etc.
 
 - [Julia](https://julialang.org/), a high-level, high-performance, dynamic programming language
 
-### Installing
+### Installation
 
 This package can be installed using the Julia package manager from the Julia command line:
 
@@ -53,7 +59,7 @@ Then, you can use this module either with command line interface or Julia REPL.
 Run `julia -h` for a detailed instruction. Here are some simple examples:
 
     julia Juro.jl/src/run.jl sod 128 0.1 tmp
-    julia Juro.jl/src/run.jl KH 512 1 examples/KH_512
+    julia Juro.jl/src/run.jl KH 512 1.0 examples/KH_512
 
 Once the run is done, you can restart from the last snapshot by adding `--restart 10` and keeping every other parameters unchanged except `tend`. A snapshot to resume the simulation from is store in `output_dir/data`. 
 
@@ -61,7 +67,6 @@ Optionally, you may add a `-i` option to the `julia` command to make the run mor
 
 1.  You may interrupt the run at any time by pressing `Ctrl-c` and the program will save all the necessary data needed to resume the run before quitting.
 2.  After the program is finished, you will be returned to the Julia REPL where the program was running, and you will be able to start another run immediately by using `hydro(...)`. See the next section `Run with REPL` for details.
-
 
 ### Run with REPL
 
