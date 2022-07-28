@@ -9,9 +9,29 @@ Hydro.jl is a modular hydrodynamic code written in pure Julia.
 
 ## Tests and Demo
 
+### Sod tube shock wave
+
+<img src="test/hydro_00010.png" alt="img" style="width:500px;" />
+
+Run:
+
+```julia
+hydro(1, 128, 0.1, "/tmp/Hydro/sod-128", init_sod; solver=hllc, dtout=0.01, plotit=plot_standard_sod)
+```
+
+or 
+
+```shell
+julia Juro.jl/src/run.jl sod 128 0.1 hllc RK3 /tmp/Hydro/sod-128
+```
+
+### Kelvin-Helmholz instability
+
 Click on the gif to see a full video on vimeo.com. Click [here](https://github.com/chongchonghe/shared-files/blob/main/github/hll-2d-KH-512.new3.30hz.mp4?raw=true) to download a lossless video (34 MB).
 
 [![gif](https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/da398ffd-45f7-42cd-ba67-034e95081831.gif?ClientID=vimeo-core-prod&Date=1659049549&Signature=9a38f58dc1c3fcad84bd2b2165e4b7b5321ce23f)](https://vimeo.com/734536881)
+
+Run: `julia Juro.jl/src/run.jl KH 512 1.0 /tmp/Hydro/KH-512 --dtout0.005 --verbose`. 
 
 ## Technical Description
 
