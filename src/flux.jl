@@ -7,7 +7,7 @@ function prim2cons!(ρ, vel, pressure, u::Matrix{Float64}, gamma::Float64)
 end
 
 function prim2cons(g::Grid)
-    prim2cons!(g.rho, g.vel, g.pressure, g.u, g.gamma)
+    prim2cons!(g.rho, g.vx, g.pressure, g.u, g.gamma)
     return
 end
 
@@ -36,9 +36,9 @@ end
 """ Reconstruct rho, vel, E, epsilon, and pressure from g.u """
 function cons2prim(g::Grid)
     g.rho .= g.u[:, 1]
-    g.vel .= g.u[:, 2] ./ g.rho
+    g.vx .= g.u[:, 2] ./ g.rho
     g.E .= g.u[:, 3]
-    @. g.epsilon = g.E / g.rho - 0.5 * g.vel^2
+    @. g.epsilon = g.E / g.rho - 0.5 * g.vx^2
     @. g.pressure = g.lambda * g.rho * g.epsilon
     @. g.cs = sqrt(g.gamma * g.pressure / g.rho)
     return nothing
@@ -72,7 +72,7 @@ function calc_flux(rho, vel, pressure, gamma::Float64)
 end
 
 function calc_flux(g::Grid)
-    calc_flux!(g.rho, g.vel, g.pressure, g.gamma, g.fu)
+    calc_flux!(g.rho, g.vx, g.pressure, g.gamma, g.fu)
     return g.fu
 end
 
