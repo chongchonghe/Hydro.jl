@@ -24,7 +24,7 @@ function arg_parser()
         required = true
         "solver"
         help = "the Riemann solver, one of lax, hll1st, hll2nd"
-        default = "hll2nd"
+        default = "hll"
         "integrator"
         help = "The integrator to use, one of euler, RK2, RK3"
         default = "RK3"
@@ -35,6 +35,10 @@ function arg_parser()
         help = "the time step of plotting figures"
         arg_type = Float64
         default = 0.01
+        "--order"
+        help = "the spacial precision of the Riemann solver"
+        arg_type = Int
+        default = 2
         "--ny"
         help = "number of pixels in the x dimention; negative values means ny = nx"
         arg_type = Int64
@@ -46,6 +50,9 @@ function arg_parser()
         help = "the snapshot to start the simulation from; the JLD data file [folder]/data/hydro_[restart].jld is used to resume the simulation."
         arg_type = Int64
         default = -1
+        "--verbose"
+        help = "toggle verbose loggin"
+        action = :store_true
     end
     return parse_args(s)
 end
@@ -55,50 +62,23 @@ function main1()
 
     args = arg_parser()
 
-    if args["solver"] == "lax"
-        solver = lax
-    elseif args["solver"] == "hll1st"
-        solver = hll1st
-    elseif args["solver"] == "hll2nd"
-        solver = hll2nd
-    else
-        println("Unknown solver $(args["solver"])")
-        exit(1)
-    end
-
-    if args["integrator"] == "euler"
-        integrator = euler
-    elseif args["integrator"] == "RK2"
-        integrator = RK2
-    elseif args["integrator"] == "RK3"
-        integrator = RK3
-    else
-        println("Unknown integrator $(args["integrator"])")
-        exit(1)
-    end
-
-    if args["plot"] == "curve"
-        plotit = plot_curve
-    elseif args["plot"] == "heat"
-        plotit = plot_heat
-    elseif args["plot"] == "heat4panels"
-        plotit = plot_heat_four_panels
-    elseif args["plot"] == "auto"
-        plotit = plot_curve_or_heat
-    else
-        println("Unknown plotting function $(args["plot"])")
-        exit(1)
-    end
-
     problem = args["problem"]
+    plotit = plot_curve_or_heat
     if problem == "sod"
         dim = 1
         init = init_sod
         fillbc = fill_trans_bc
+        plotit = plot_standard_sod
     elseif problem == "sod2d"
         dim = 2
         init = init_sod
         fillbc = fill_trans_bc
+        plotit = plot_standard_sod
+    elseif problem == "sod2dy"
+        dim = 2
+        init = init_sod_y
+        fillbc = fill_trans_bc
+        plotit = plot_standard_sod_y
     elseif problem == "ball"
         dim = 2
         init = init_ball
@@ -120,11 +100,56 @@ function main1()
         exit(1)
     end
 
+    if args["solver"] == "lax"
+        solver = lax
+    elseif args["solver"] == "hll"
+        solver = hll
+    elseif args["solver"] == "hllc"
+        solver = hllc
+    else
+        println("Unknown solver $(args["solver"])")
+        exit(1)
+    end
+
+    if args["integrator"] == "euler"
+        integrator = euler
+    elseif args["integrator"] == "RK2"
+        integrator = RK2
+    elseif args["integrator"] == "RK3"
+        integrator = RK3
+    else
+        println("Unknown integrator $(args["integrator"])")
+        exit(1)
+    end
+
+    # default: auto
+    if args["plot"] == "curve"
+        plotit = plot_curve
+    elseif args["plot"] == "standard_sod"
+        plotit = plot_standard_sod
+    elseif args["plot"] == "heat"
+        plotit = plot_heat
+    elseif args["plot"] == "heat4panels"
+        plotit = plot_heat_four_panels
+    elseif args["plot"] == "auto"
+        # use what is chosen above
+    else
+        println("Unknown plotting function $(args["plot"])")
+        exit(1)
+    end
+
     hydro(dim, args["nx"], args["tend"], args["folder"], init;
-          solver=solver, integrator=integrator, fillbc=fillbc, plotit=plotit,
-          dtout=args["dtout"], ny=args["ny"],
+          solver=solver,
+          order=args["order"],
+          integrator=integrator,
+          fillbc=fillbc,
+          plotit=plotit,
+          dtout=args["dtout"],
+          ny=args["ny"],
           storealldata=args["storealldata"],
-          restart=args["restart"], islog=true)
+          restart=args["restart"],
+          verbose=args["verbose"],
+          islog=true)
 
     return
 end
