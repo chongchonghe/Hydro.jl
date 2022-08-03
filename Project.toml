@@ -15,7 +15,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 ArgParse = "1"
-CompatHelper = "3"
+CompatHelper = "2, 3"
 JLD = "0.13"
 NLsolve = "4"
 Parameters = "0.12"
