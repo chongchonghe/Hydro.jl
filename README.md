@@ -7,6 +7,24 @@
 
 Hydro.jl is a modular hydrodynamic code written in pure Julia. 
 
+<!-- ## Getting Started -->
+
+<!-- ### Dependencies -->
+
+<!-- - [Julia](https://julialang.org/), a high-level, high-performance, dynamic programming language -->
+
+## Installation
+
+This package can be installed using the Julia package manager from the Julia command line:
+
+``` julia
+julia> using Pkg; Pkg.add("Hydro")
+```
+
+<!-- First, clone this repository to a directory -->
+
+<!--     git clone https://github.com/chongchonghe/Hydro.git -->
+
 
 ## Tests and Demo
 
@@ -17,14 +35,15 @@ Hydro.jl is a modular hydrodynamic code written in pure Julia.
 Run:
 
 ```julia
+using Hydro
 hydro(1, 128, 0.1, "/tmp/Hydro/sod-128", init_sod; solver=hllc, dtout=0.01, plotit=plot_standard_sod)
 ```
 
-or 
+<!-- or  -->
 
-```shell
-julia Juro.jl/src/run.jl sod 128 0.1 hllc RK3 /tmp/Hydro/sod-128
-```
+<!-- ```shell -->
+<!-- julia ~/.julia/packages/Hydro.jl/src/run.jl sod 128 0.1 hllc RK3 /tmp/Hydro/sod-128 -->
+<!-- ``` -->
 
 ### Kelvin-Helmholz instability
 
@@ -32,7 +51,11 @@ Click on the gif to see a full video on vimeo.com. Click [here](https://github.c
 
 [![gif](https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/da398ffd-45f7-42cd-ba67-034e95081831.gif?ClientID=vimeo-core-prod&Date=1659049549&Signature=9a38f58dc1c3fcad84bd2b2165e4b7b5321ce23f)](https://vimeo.com/734536881)
 
-Run: `julia Juro.jl/src/run.jl KH 512 1.0 /tmp/Hydro/KH-512 --dtout0.005 --verbose`. 
+<!-- Run: `julia Hydro.jl/src/run.jl KH 512 1.0 /tmp/Hydro/KH-512 --dtout0.005 --verbose`.  -->
+
+```julia
+hydro(1, 512, 1.0, "/tmp/Hydro/KH-512", init_KH; dtout=0.005, verbose=true)
+```
 
 ## Technical Description
 
@@ -53,53 +76,52 @@ Run: `julia Juro.jl/src/run.jl KH 512 1.0 /tmp/Hydro/KH-512 --dtout0.005 --verbo
 
 TODO: add descriptions to the Riemann solvers, interpolation method, etc.
 
-## Getting Started
+<!-- ## Getting Started -->
 
-### Dependencies
+<!-- ### Dependencies -->
 
-- [Julia](https://julialang.org/), a high-level, high-performance, dynamic programming language
+<!-- - [Julia](https://julialang.org/), a high-level, high-performance, dynamic programming language -->
 
-### Installation
+<!-- ### Installation -->
 
-This package can be installed using the Julia package manager from the Julia command line:
+<!-- This package can be installed using the Julia package manager from the Julia command line: -->
 
-``` julia
-julia> using Pkg; Pkg.add("ArgParse")
-```
+<!-- ``` julia -->
+<!-- julia> using Pkg; Pkg.add("ArgParse") -->
+<!-- ``` -->
 
 <!-- First, clone this repository to a directory -->
 
-<!--     git clone https://github.com/chongchonghe/Juro.git -->
+<!--     git clone https://github.com/chongchonghe/Hydro.git -->
 
-### Usage
+## Usage
 
-Then, you can use this module either with command line interface or Julia REPL.
+<!-- After installation, you can use this module either with command line interface or Julia REPL. -->
 
-### Run with the command line interface
+<!-- Examples of using Hydro.jl: -->
+<!-- in the Julia REPL (read-eval-print loop): -->
 
-Run `julia -h` for a detailed instruction. Here are some simple examples:
-
-    julia Juro.jl/src/run.jl sod 128 0.1 tmp
-    julia Juro.jl/src/run.jl KH 512 1.0 examples/KH_512
-
-Once the run is done, you can restart from the last snapshot by adding `--restart 10` and keeping every other parameters unchanged except `tend`. A snapshot to resume the simulation from is store in `output_dir/data`. 
-
-Optionally, you may add a `-i` option to the `julia` command to make the run more flexible by bringing two extra features:
-
-1.  You may interrupt the run at any time by pressing `Ctrl-c` and the program will save all the necessary data needed to resume the run before quitting.
-2.  After the program is finished, you will be returned to the Julia REPL where the program was running, and you will be able to start another run immediately by using `hydro(...)`. See the next section `Run with REPL` for details.
-
-### Run with REPL
-
-You can use Hydro.jl via Julia REPL (read-eval-print loop).
-
-    julia> include("Hydro.jl/src/Hydro.jl")
-    
-    julia> using .Hydro
+    julia> using Hydro
     
     julia> hydro(1, 512, 0.1, "tmp", init_sod)
     
-    julia> hydro(1, 512, 0.2, "tmp", init_sod, restart=10)
+    julia> hydro(1, 512, 0.2, "tmp2", init_sod, restart=10)
+
+<!-- ### Run with the command line interface -->
+
+<!-- Run `julia run.jl -h` for a detailed instruction. Here are some simple examples: -->
+
+<!--     julia Hydro.jl/src/run.jl sod 128 0.1 tmp -->
+<!--     julia Hydro.jl/src/run.jl KH 512 1.0 examples/KH_512 -->
+
+For a complete documentation, run `?hydro`. 
+
+Once a run is finished, a reloadable data file for the last snapshot is stored in `[folder]/data`.  You can reload the simulation by setting `restart` and increasing `tend`. You may also interrupt a simulation with Ctrl-c and the most recent snapshot will be saved.
+
+<!-- Optionally, you may add a `-i` option to the `julia` command to make the run more flexible by bringing two extra features: -->
+
+<!-- 1.  You may interrupt the run at any time by pressing `Ctrl-c` and the program will save all the necessary data needed to resume the run before quitting. -->
+<!-- 2.  After the program is finished, you will be returned to the Julia REPL where the program was running, and you will be able to start another run immediately by using `hydro(...)`. See the next section `Run with REPL` for details. -->
 
 
 

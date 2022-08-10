@@ -30,9 +30,9 @@ function twod2oned(g::Grid2d, axis='x')
 end
 
 
-function plotnone(g; fn="", is_save=true)
-    return
-end
+# function plotnone(g; fn="", is_save=true)
+#     return
+# end
 
 
 function plot_curve(g::Grid; fn="t.png", is_save=true)
