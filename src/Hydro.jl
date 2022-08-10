@@ -55,6 +55,7 @@ Arguments
         plot_heat: plot heat map of the density
         plot_heat_four_panels: plot heat maps of the density, x-velocity, y-velocity, and pressure
         plot_curve_or_heat (default): automatically pick plot_curve if dim=1 or plot_heat if dim=2
+        plot_standard_sod: on top of plot_curve, plot the analytic solution to the standard Sod shock tube problem (rho = 1.0, 0.125, velocity = 0.0, 0.0, pressure = 1.0, 0.1 for the left and right state)
     dtout: (Float, default: 0.01) the time interval between two outputs.
     ny: (Int, default: -1) the number of pixels in the second dimention. A negative value (default) means ny = nx.
     storealldata: (Bool, default: false) toggle store reloadable data for each outputs set by dtout. If false, will only store the data for the last output, or the last output before you interrupt with Ctrl-c.
@@ -69,7 +70,7 @@ Examples
 
     julia> hydro(1, 512, 0.2, "tmp", init_sod, restart=10)
 
-    julia> hydro(1, 128, 1.0, "/tmp/Hydro/KH-128", init_KH; dtout=0.005, verbose=true)
+    julia> hydro(2, 128, 1.0, "/tmp/Hydro/KH-128", init_KH; dtout=0.005, verbose=true)
 
 """
 function hydro(dim, nx, tend, folder::String, init::Function;
