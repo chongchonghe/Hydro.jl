@@ -42,44 +42,49 @@ function calc_dt(g::Grid2d, dt_init=inf)
 end
 
 # General Euler, 1st order
-function euler(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
+function euler(g, dt, solver::Function, reconstruct::Function, fillbc::Function)
     lu = solver(g, reconstruct)
     @. g.u = g.u + dt * lu
-    rebuild(g)
+    fillbc(g)
+    cons2prim(g)
     g.t += dt
     return
 end
 
 # RK2, general
-function RK2(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
+function RK2(g, dt, solver::Function, reconstruct::Function, fillbc::Function)
     uold = copy(g.u)
     lu = solver(g, reconstruct)
     k1 = dt .* lu
     @. g.u = g.u + 0.5 * k1
-    rebuild(g)
+    fillbc(g)
+    cons2prim(g)
     lu = solver(g, reconstruct)
     k2 = dt .* lu
     @. g.u = uold + k2
-    rebuild(g)
+    fillbc(g)
+    cons2prim(g)
     g.t += dt
 end
 
 # RK2, general
-function RK2new(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
+function RK2new(g, dt, solver::Function, reconstruct::Function, fillbc::Function)
     uold = copy(g.u)
     lu = solver(g, reconstruct)
     k1 = dt .* lu
     @. g.u = g.u + k1
-    rebuild(g)
+    fillbc(g)
+    cons2prim(g)
     lu = solver(g, reconstruct)
     k2 = dt .* lu
     @. g.u = uold + (k1 + k2) / 2
-    rebuild(g)
+    fillbc(g)
+    cons2prim(g)
     g.t += dt
 end
 
 # RK3, general
-function RK3(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
+function RK3(g, dt, solver::Function, reconstruct::Function, fillbc::Function)
     uold = copy(g.u)
     mat = [1. 0. 1.; 0.75 0.25 0.25; 1/3 2/3 2/3]
     for i = 1:size(mat, 1)
@@ -87,7 +92,8 @@ function RK3(g, dt, solver::Function, reconstruct::Function, rebuild::Function)
         # v = @view lu[:, :, 4]
         # println("lu[:, :, 4] = ", maximum(v), " ", minimum(v))
         @. g.u = mat[i, 1] * uold + mat[i, 2] * g.u + mat[i, 3] * dt * lu
-        rebuild(g)
+        fillbc(g)
+        cons2prim(g)
     end
     g.t += dt
 end

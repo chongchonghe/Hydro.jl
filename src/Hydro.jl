@@ -22,6 +22,119 @@ include("integrator.jl")
 include("plot.jl")
 
 
+"""
+    evolve(s)
+
+Run a hydrodynamics simulation using the parameters stored in the sim structure.
+This function evolves the simulation from the current time to the end time.
+"""
+function evolve(s::simulation)
+
+    g = s.g
+
+    msg = """
+Running Hydro.jl, a modular 1- and 2-dimensional hydrodynamic
+code written in pure Julia.
+Author: Chong-Chong He (che1234@umd.edu)
+
+Solving the following problem with parameters:
+nx = $(g.nx)
+dtout = $(s.dtout)
+tend = $(s.tend)
+Riemann solver: $(s.solver)
+Integrator: $(s.integrator)
+Boundary condition: $(s.fillbc)
+Plotting function: $(s.plotit)
+"""
+    print(msg)
+    @debug "Debug enabled"
+    run(`mkdir -p $(s.folder)`)
+    fw = nothing
+    if s.islog
+        fw = open("$(s.folder)/log.o", "w")
+        write(fw, msg)
+    end
+    
+    # plot the first snapshot
+    error = s.plotit(g, fn="$(s.folder)/hydro_$(lpad(s.fcount, 5, '0')).png")
+    count = s.count # the number of time steps
+    msg = "\ncount = $(count), fcount = $(s.fcount), t = $(g.t)"
+    if s.plotit == plot_standard_sod
+        msg = msg * ", relative error = $(error)"
+    end
+    print(msg * "\n")
+    if s.islog && fw !== nothing
+        write(fw, msg * "\n")
+    end
+    
+    # set up timing
+    tout = g.t + s.dtout
+    dt = 1.0
+    
+    try
+        while true
+            dt = calc_dt(g, dt)
+            if isnan(dt)
+                println("Failed at count = $(count), t = $(g.t): dt = $(dt)")
+                if s.islog && fw !== nothing
+                    close(fw)
+                end
+                return 1
+            end
+            
+            if s.verbose
+                println("count = $(count), t = $(g.t), dt = $(dt)")
+            end
+            
+            s.integrator(g, dt, s.solver, s.reconstruct, s.fillbc)
+            count += 1
+            
+            if g.t > tout || g.t ≈ tout
+                s.fcount += 1
+                error = s.plotit(g, fn="$(s.folder)/hydro_$(lpad(s.fcount, 5, '0')).png")
+                msg = "count = $(count), fcount = $(s.fcount), " *
+                      "t = $(g.t), tout = $(tout)"
+                if !(error === nothing)
+                    msg = msg * ", relative error = $(error)"
+                end
+                print(msg * "\n")
+                if s.islog && fw !== nothing
+                    write(fw, msg * "\n")
+                end
+                
+                if s.storealldata || (g.t > s.tend || g.t ≈ s.tend)
+                    # write jld data
+                    fn = "$(s.datadir)/hydro_$(lpad(s.fcount, 5, '0')).jld"
+                    grid_write(g, fn)
+                end
+                
+                if g.t > s.tend || g.t ≈ s.tend
+                    break
+                end
+                tout += s.dtout
+            end
+        end
+    catch err
+        if isa(err, InterruptException)
+            fn = "$(s.datadir)/hydro_$(lpad(s.fcount, 5, '0')).jld"
+            msg = "Interrupted, saving $(fn)\n"
+            print(msg)
+            grid_write(g, fn)
+            if s.islog && fw !== nothing
+                write(fw, msg)
+            end
+        else
+            rethrow()
+        end
+    end
+    
+    println("Simulation done.")
+    if s.islog && fw !== nothing
+        write(fw, "Simulation done.\n")
+        close(fw)
+    end
+end
+
 """ A general-purpose hydro solver
 
 hydro(dim, nx, tend, folder, init;
@@ -86,39 +199,6 @@ function hydro(dim, nx, tend, folder::String, init::Function;
                islog::Bool=true,
                verbose::Bool=false)
 
-    msg = """
-Running Hydro.jl, a modular 1- and 2-dimensional hydrodynamic
-code written in pure Julia.
-Author: Chong-Chong He (che1234@umd.edu)
-
-Solving the following problem with parameters:
-Initial condition: $(init)
-nx = $(nx)
-dtout = $(dtout)
-tend = $(tend)
-Riemann solver: $(solver)
-Integrator: $(integrator)
-Boundary condition: $(fillbc)
-Plotting function: $(plotit)
-"""
-    print(msg)
-    @debug "Debug enabled"
-    run(`mkdir -p $folder`)
-    if islog
-        logfile = "$(folder)/log.o"
-        if isfile(logfile)
-            for i = 1:1000
-                logfile = "$(folder)/log.o$(i)"
-                if !isfile(logfile)
-                    break
-                end
-            end
-        end
-    end
-    if islog
-        fw = open(logfile, "w")
-        write(fw, msg)
-    end
     ng = 2
     if dim == 1
         g = Grid(nx=nx, ng=ng)
@@ -133,11 +213,11 @@ Plotting function: $(plotit)
     elseif order == 2
         reconstruct = reconstruct2nd
     end
-    function rebuild(g)
-        fillbc(g)               # fill bc for conservatives
-        cons2prim(g)            # convert conservatives to primitives
-        return
-    end
+    # function rebuild(g)
+    #     fillbc(g)               # fill bc for conservatives
+    #     cons2prim(g)            # convert conservatives to primitives
+    #     return
+    # end
 
     datadir = "$(folder)/data"
     if restart < 0
@@ -158,97 +238,12 @@ Plotting function: $(plotit)
         grid_read(g, fn)
     end
 
-    # plot the first snapshot
-    error = plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
-    count = 0
-    msg = "\ncount = $(count), fcount = $(fcount), t = $(g.t)"
-    if plotit == plot_standard_sod
-        msg = msg * ", relative error = $(error)"
-    end
-    print(msg * "\n")
-    if islog
-        write(fw, msg * "\n")
-    end
+    sim = simulation(g, 0, fcount, folder, datadir, verbose, islog, storealldata,
+              tend, dtout, solver, integrator, reconstruct, fillbc, plotit)
 
-    # evolve and plot snapshots
-    tout = g.t + dtout
-    dt = 1.0
-    try
-        while true
-            # v = @view g.u[:, :, 4]
-            # println("count = $(count)")
-            # println(maximum(v), " ", minimum(v))
-            # println()
-            dt = calc_dt(g, dt)
-            if isnan(dt)
-                println("Failed at count = $(count), t = $(g.t): dt = $(dt)")
-                # println()
-                # v = @view g.u[:, :, 4]
-                # println(maximum(v), " ", minimum(v))
-                # println()
-                # v = g.cs
-                # println(maximum(v), " ", minimum(v))
-                # println()
-                # v = g.pressure
-                # println(maximum(v), " ", minimum(v))
-                # println()
-                # v = g.epsilon
-                # println(maximum(v), " ", minimum(v))
-                # println()
-                # v = g.E
-                # println(maximum(v), " ", minimum(v))
-                return
-            end
-            @debug "count = $(count), t = $(g.t), dt = $(dt)"
-            if verbose
-                println("count = $(count), t = $(g.t), dt = $(dt)")
-            end
-            integrator(g, dt, solver, reconstruct, rebuild)
-            count += 1
-            if g.t > tout || g.t ≈ tout
-                fcount += 1
-                # plotit(g, fn="$(folder)/f-nx$(nx)-$(lpad(fcount, 5, '0')).png")
-                error = plotit(g, fn="$(folder)/hydro_$(lpad(fcount, 5, '0')).png")
-                msg = "count = $(count), fcount = $(fcount), " *
-                        "t = $(g.t), tout = $(tout)"
-                if !(error == nothing)
-                    msg = msg * ", relative error = $(error)"
-                end
-                print(msg * "\n")
-                if islog
-                    write(fw, msg * "\n")
-                end
-                if storealldata || (g.t > tend || g.t ≈ tend)
-                    # write jld data
-                    fn = "$(datadir)/hydro_$(lpad(fcount, 5, '0')).jld"
-                    grid_write(g, fn)
-                end
-                if g.t > tend || g.t ≈ tend
-                    break
-                end
-                tout += dtout
-            end
-        end
-    catch err
-        if isa(err, InterruptException)
-            fn = "$(datadir)/hydro_$(lpad(fcount, 5, '0')).jld"
-            msg = "Interrupted, saving $(fn)\n"
-            print(msg)
-            grid_write(g, fn)
-            if islog
-                write(fw, msg)
-            end
-            # return
-        else
-            rethrow()
-        end
-    end
-    println("Simulation done.")
-    if islog
-        write(fw, "Simulation done.\n")
-        close(fw)
-    end
-    return 0
+    flag = evolve(sim)
+
+    return flag
 end
 
 end
