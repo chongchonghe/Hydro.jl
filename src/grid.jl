@@ -115,3 +115,20 @@ end
     csR = similar(cs)
 end
 
+mutable struct simulation
+    g
+    count::Int
+    fcount::Int
+    folder::String
+    datadir::String
+    verbose::Bool
+    islog::Bool
+    storealldata::Bool
+    tend::Float64
+    dtout::Float64
+    solver::Function
+    integrator::Function
+    reconstruct::Function
+    fillbc::Function
+    plotit::Function
+end
